@@ -1,5 +1,6 @@
 # Ingress Uptime
-This project provides a solution for a simple health/ping response check. This is a spring-boot application and uses its actuator dependency.
+This project provides a solution for a simple health/ping response check. 
+This is a spring-boot application and uses its actuator dependency.
 
 ### Usage:
 
@@ -11,7 +12,7 @@ mvn clean package
 
 ### Run:
 ```
-java -jar target/uptime-0.0.1-SNAPSHOT
+java -jar target/<artifact>.jar
 ```
 
 ### Running as a docker container:
