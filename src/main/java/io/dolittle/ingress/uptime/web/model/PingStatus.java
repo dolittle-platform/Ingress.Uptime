@@ -29,6 +29,8 @@ public class PingStatus {
         long count = pingList.values().stream().filter(aBoolean -> aBoolean.equals(Boolean.FALSE)).count();
         if (count > 0) {
             statusOK = Boolean.FALSE;
+        } else {
+            statusOK = Boolean.TRUE;
         }
     }
 
