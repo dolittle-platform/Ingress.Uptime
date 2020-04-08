@@ -13,6 +13,8 @@ RUN mvn package
 
 
 FROM openjdk:11-slim as runtime
+RUN apt-get update && apt-get -y install cron
+RUN service cron start
 RUN addgroup --system spring && adduser --system spring --ingroup spring
 USER spring:spring
 

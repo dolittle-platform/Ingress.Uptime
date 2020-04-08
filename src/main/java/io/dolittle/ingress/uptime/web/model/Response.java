@@ -7,8 +7,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dolittle.ingress.uptime.web.util.UptimeConstants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 public class Response {
 
@@ -24,8 +26,10 @@ public class Response {
         return new Response(Status.ERROR,"");
     }
 
-    private enum Status {
+    public enum Status {
+        @JsonProperty(value = "OK")
         OK,
+        @JsonProperty(value = "ERROR")
         ERROR
     }
 }
