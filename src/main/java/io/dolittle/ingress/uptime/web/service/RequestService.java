@@ -4,6 +4,7 @@
 package io.dolittle.ingress.uptime.web.service;
 
 import io.dolittle.ingress.uptime.web.component.KeyManager;
+import io.dolittle.ingress.uptime.web.model.PingHost;
 import io.dolittle.ingress.uptime.web.model.Response;
 import io.dolittle.ingress.uptime.web.util.RESTUtil;
 import io.dolittle.ingress.uptime.web.util.UptimeConstants;
@@ -21,9 +22,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
-import static io.dolittle.ingress.uptime.web.util.UptimeConstants.PATH_PING;
-import static io.dolittle.ingress.uptime.web.util.UptimeConstants.PROTOCOL_HTTPS;
-
 @Service
 @Slf4j
 public class RequestService {
@@ -37,13 +35,13 @@ public class RequestService {
     }
 
     @Async
-    public CompletableFuture<HashMap<String, Boolean>> pingHost(String host) {
+    public CompletableFuture<HashMap<String, Boolean>> pingHost(PingHost pingHost) {
         HashMap<String, Boolean> result = new HashMap<>();
-        result.put(host, Boolean.FALSE);
+        result.put(pingHost.getHost(), Boolean.FALSE);
 
-        String url = PROTOCOL_HTTPS + host + PATH_PING;
+        String url = pingHost.getURL();
 
-        String challengeKey = keyManager.addChallengeKey(host);
+        String challengeKey = keyManager.addChallengeKey(pingHost.getHost());
 
         RestTemplate restTemplate = RESTUtil.getRestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -63,11 +61,12 @@ public class RequestService {
         Response response = exchange.getBody();
         assert response != null;
 
-        if (!verifyResponseKey(response, host)) {
+        if (!verifyResponseKey(response, pingHost.getHost())) {
+            log.warn("*** UNABLE TO VERIFY -> host: {}, url: {}, challenge-key: {} ***", pingHost.getHost(), pingHost.getURL(), challengeKey);
             return CompletableFuture.completedFuture(result);
         }
 
-        result.put(host, Boolean.TRUE);
+        result.put(pingHost.getHost(), Boolean.TRUE);
 
         return CompletableFuture.completedFuture(result);
     }

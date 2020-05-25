@@ -3,6 +3,7 @@
 
 package io.dolittle.ingress.uptime.web.component;
 
+import io.dolittle.ingress.uptime.web.model.PingHost;
 import io.dolittle.ingress.uptime.web.service.KubernetesService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import java.util.Set;
 @Slf4j
 public class IngressManager {
 
-    private Set<String> hostList = new HashSet<>();
+    private final Set<PingHost> hostList = new HashSet<>();
     private final KubernetesService k8Service;
 
     @Autowired
@@ -34,17 +35,17 @@ public class IngressManager {
     public void listAllMonitoredIngress() {
         log.debug("Listing all monitored ingresses in cluster");
 
-        List<String> hostsToPing = k8Service.getAllHostToPingFromIngress();
+        List<PingHost> hostsToPing = k8Service.getAllHostToPingFromIngress();
         updateHostList(hostsToPing);
 
         log.info("Found {} ingresses in cluster", hostsToPing.size());
     }
 
-    private synchronized void updateHostList(List<String> ingList) {
+    private synchronized void updateHostList(List<PingHost> ingList) {
         hostList.addAll(ingList);
     }
 
-    public synchronized List<String> getHostList() {
+    public synchronized List<PingHost> getHostList() {
         return new ArrayList<>(hostList);
     }
 }

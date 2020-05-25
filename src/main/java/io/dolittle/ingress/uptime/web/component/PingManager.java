@@ -3,6 +3,7 @@
 
 package io.dolittle.ingress.uptime.web.component;
 
+import io.dolittle.ingress.uptime.web.model.PingHost;
 import io.dolittle.ingress.uptime.web.model.PingStatus;
 import io.dolittle.ingress.uptime.web.service.RequestService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,15 +30,13 @@ public class PingManager {
 
     @Scheduled(cron = "0 3/5 * * * ?")
     public void doPing() {
-        List<String> hostList = ingressManager.getHostList();
+        List<PingHost> hostList = ingressManager.getHostList();
 
-        hostList.forEach(host -> {
-            requestService.pingHost(host).thenAcceptAsync(map -> {
-                Boolean status = map.get(host);
-                pingStatus.updateStatus(host, status);
-                log.debug("Done pinging: {}", host);
-            });
-        });
+        hostList.forEach(pingHost -> requestService.pingHost(pingHost).thenAcceptAsync(map -> {
+            Boolean status = map.get(pingHost.getHost());
+            pingStatus.updateStatus(pingHost.getHost(), status);
+            log.debug("Done pinging: {}", pingHost.getURL());
+        }));
     }
 
     public Boolean getStatus() {

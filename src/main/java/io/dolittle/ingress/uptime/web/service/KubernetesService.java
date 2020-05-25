@@ -3,16 +3,16 @@
 
 package io.dolittle.ingress.uptime.web.service;
 
-import io.kubernetes.client.ApiClient;
-import io.kubernetes.client.ApiException;
-import io.kubernetes.client.Configuration;
-import io.kubernetes.client.apis.ExtensionsV1beta1Api;
-import io.kubernetes.client.models.ExtensionsV1beta1Ingress;
-import io.kubernetes.client.models.ExtensionsV1beta1IngressList;
-import io.kubernetes.client.models.ExtensionsV1beta1IngressRule;
-import io.kubernetes.client.models.ExtensionsV1beta1IngressSpec;
+import io.dolittle.ingress.uptime.web.model.PingHost;
+import io.dolittle.ingress.uptime.web.properties.MonitorProperties;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.Configuration;
+import io.kubernetes.client.openapi.apis.ExtensionsV1beta1Api;
+import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.ClientBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -20,15 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.dolittle.ingress.uptime.web.util.UptimeConstants.INGRESS_MONITORING_LABEL;
 
 @Service
 @Slf4j
 public class KubernetesService {
 
     private final ExtensionsV1beta1Api extV1beta1Api;
+    private final MonitorProperties properties;
 
-    public KubernetesService() {
+    @Autowired
+    public KubernetesService(MonitorProperties properties) {
+        this.properties = properties;
         try {
 
             ApiClient apiClient = ClientBuilder.cluster().build();
@@ -41,16 +43,27 @@ public class KubernetesService {
         extV1beta1Api = new ExtensionsV1beta1Api();
     }
 
-    public List<String> getAllHostToPingFromIngress() {
-        List<String> hosts = new ArrayList<>();
+    public List<PingHost> getAllHostToPingFromIngress() {
+        List<PingHost> hosts = new ArrayList<>();
         try {
-            ExtensionsV1beta1IngressList extensionsV1beta1IngressList = extV1beta1Api.listIngressForAllNamespaces(null, null, INGRESS_MONITORING_LABEL, null, null, null, null, null);
-            List<ExtensionsV1beta1IngressSpec> specs = extensionsV1beta1IngressList.getItems().stream().map(ExtensionsV1beta1Ingress::getSpec).collect(Collectors.toList());
-            List<ExtensionsV1beta1IngressRule> rules = specs.stream().flatMap(ingressSpec -> ingressSpec.getRules().stream()).collect(Collectors.toList());
-            rules.forEach(ingressRule -> {
-                log.info("Ingress host: {}", ingressRule.getHost());
-                hosts.add(ingressRule.getHost());
-            });
+            ExtensionsV1beta1IngressList extensionsV1beta1IngressList = extV1beta1Api.listIngressForAllNamespaces(null, null, null, properties.getIngressSelector(), null, null, null, null, null);
+            if (extensionsV1beta1IngressList != null) {
+
+                List<ExtensionsV1beta1IngressSpec> specs = extensionsV1beta1IngressList.getItems().stream().map(ExtensionsV1beta1Ingress::getSpec).collect(Collectors.toList());
+                specs.forEach(ingressSpec -> {
+                    PingHost pingHost = new PingHost();
+
+                    ExtensionsV1beta1IngressRule ingressRule = ingressSpec.getRules().get(0);
+                    pingHost.setHost(ingressRule.getHost());
+                    pingHost.setPath(ingressRule.getHttp().getPaths().get(0).getPath());
+                    log.debug("Ingress host: {}, path: {}", pingHost.getHost(), pingHost.getPath());
+
+                    List<ExtensionsV1beta1IngressTLS> tls = ingressSpec.getTls();
+                    pingHost.setTls(tls != null);
+                    log.debug("Adding ping URL: {}", pingHost.getURL());
+                    hosts.add(pingHost);
+                });
+            }
         } catch (ApiException e) {
             log.error("Unable to list ingress for all namespaces", e);
         }

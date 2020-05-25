@@ -4,6 +4,7 @@
 package io.dolittle.ingress.uptime.config.web;
 
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -15,6 +16,7 @@ import java.util.concurrent.Executor;
 
 @Configuration
 @ComponentScan(basePackages = {"io.dolittle.ingress.uptime.web"})
+@ConfigurationPropertiesScan(basePackages = {"io.dolittle.ingress.uptime.web.properties"})
 @Import(SecurityConfig.class)
 @EnableAsync
 @EnableScheduling
