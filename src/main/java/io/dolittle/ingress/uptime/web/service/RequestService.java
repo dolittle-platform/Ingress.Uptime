@@ -54,7 +54,8 @@ public class RequestService {
             exchange = restTemplate.exchange(url, HttpMethod.GET, httpEntity, Response.class);
 
         } catch (RestClientException e) {
-            log.error("Error pinging: "+ url, e);
+            log.error("Error pinging: "+ url);
+            log.debug("Stack trace", e);
             return CompletableFuture.completedFuture(result);
         }
 
