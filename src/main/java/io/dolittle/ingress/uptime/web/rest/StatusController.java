@@ -27,7 +27,7 @@ public class StatusController {
 
     @RequestMapping(value = "/status")
     public ResponseEntity<String> Status() {
-        Boolean status = pingManager.getStatus();
+        Boolean status = pingManager.getSummary();
         if (status) {
             return new ResponseEntity<>("{ \"status\":\"OK\" }", HttpStatus.OK);
         }

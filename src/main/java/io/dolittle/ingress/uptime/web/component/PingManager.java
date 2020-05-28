@@ -28,7 +28,7 @@ public class PingManager {
         log.info("Ping Manager instantiated.");
     }
 
-    @Scheduled(cron = "0 3/5 * * * ?")
+    @Scheduled(cron = "* */5 * * * ?")
     public void doPing() {
         List<PingHost> hostList = ingressManager.getHostList();
 
@@ -39,8 +39,12 @@ public class PingManager {
         }));
     }
 
-    public Boolean getStatus() {
-        Boolean status = pingStatus.getStatus();
+    public PingStatus getStatus() {
+        return pingStatus;
+    }
+
+    public Boolean getSummary() {
+        Boolean status = pingStatus.getSummary();
         if (!status) {
             printStatus();
         }

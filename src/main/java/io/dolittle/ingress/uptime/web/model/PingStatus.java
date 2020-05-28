@@ -12,12 +12,8 @@ import java.util.HashMap;
 @Slf4j
 public class PingStatus {
 
-    private Boolean statusOK = Boolean.TRUE;
+    private Boolean summary = Boolean.TRUE;
     private HashMap<String, Boolean> pingList = new HashMap<>();
-
-    public Boolean getStatus() {
-        return statusOK;
-    }
 
     public synchronized void updateStatus(String host, Boolean status) {
         log.debug("Updating status for host: {}, status: {}", host, status);
@@ -26,11 +22,11 @@ public class PingStatus {
     }
 
     private void updateInternalStatus() {
-        long count = pingList.values().stream().filter(aBoolean -> aBoolean.equals(Boolean.FALSE)).count();
-        if (count > 0) {
-            statusOK = Boolean.FALSE;
+        if (pingList.values().stream().anyMatch(aBoolean -> aBoolean.equals(Boolean.FALSE)))
+        {
+            summary = Boolean.FALSE;
         } else {
-            statusOK = Boolean.TRUE;
+            summary = Boolean.TRUE;
         }
     }
 
