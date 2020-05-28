@@ -6,6 +6,8 @@ package io.dolittle.ingress.uptime.web.component;
 import io.dolittle.ingress.uptime.web.model.PingHost;
 import io.dolittle.ingress.uptime.web.model.PingStatus;
 import io.dolittle.ingress.uptime.web.service.RequestService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,12 +21,14 @@ public class PingManager {
 
     private final IngressManager ingressManager;
     private final RequestService requestService;
+    private final MeterRegistry registry;
     private final PingStatus pingStatus = new PingStatus();
 
     @Autowired
-    public PingManager(RequestService requestService, IngressManager ingressManager) {
+    public PingManager(RequestService requestService, IngressManager ingressManager, MeterRegistry registry) {
         this.ingressManager = ingressManager;
         this.requestService = requestService;
+        this.registry = registry;
         log.info("Ping Manager instantiated.");
     }
 
@@ -33,6 +37,7 @@ public class PingManager {
         List<PingHost> hostList = ingressManager.getHostList();
 
         hostList.forEach(pingHost -> requestService.pingHost(pingHost).thenAcceptAsync(map -> {
+            registry.counter("uptime.ping", Tags.of("host", pingHost.getHost())).increment();
             Boolean status = map.get(pingHost.getHost());
             pingStatus.updateStatus(pingHost.getHost(), status);
             log.debug("Done pinging: {}", pingHost.getURL());
